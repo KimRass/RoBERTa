@@ -10,7 +10,7 @@ import argparse
 
 import config
 from utils import get_elapsed_time
-from model import BERTForPretraining
+from model import RoBERTaForPretraining
 from byte_level_bpe import load_fast_roberta_tokenizer
 from pretrain.bookcorpus import BookCorpusForRoBERTa
 from pretrain.masked_language_model import MaskedLanguageModel
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         drop_last=True,
     )
 
-    model = BERTForPretraining( # Smaller than BERT-Base
+    model = RoBERTaForPretraining( # Smaller than BERT-Base
         vocab_size=config.VOCAB_SIZE,
         max_len=config.MAX_LEN,
         pad_id=train_ds.pad_id,
