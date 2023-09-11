@@ -21,7 +21,8 @@ MAX_LR = 2e-4
 BETA1 = 0.9
 BETA2 = 0.98
 EPS = 1e-6
-WEIGHT_DECAY = 0.01
+# WEIGHT_DECAY = 0.01
+WEIGHT_DECAY = 0
 
 ### Training
 N_GPUS = torch.cuda.device_count()
