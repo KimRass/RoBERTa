@@ -115,7 +115,7 @@ if __name__ == "__main__":
         optim.load_state_dict(ckpt["optimizer"])
         step = ckpt["step"]
         prev_ckpt_path = Path(args.ckpt_path)
-        print(f"Resuming from checkpoint\n    '{str(Path(args.ckpt_path).name)}'...")
+        print(f"Resuming from checkpoint '{str(Path(args.ckpt_path).name)}'...")
     else:
         step = 0
         prev_ckpt_path = Path(".pth")
