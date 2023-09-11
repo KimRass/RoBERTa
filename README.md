@@ -1,2 +1,2 @@
-# roberta_from_scratch
-'RoBERTa' (Liu et al., 2019) implementation from scratch in PyTorch
+# Paper Reading
+- [RoBERTa: A Robustly Optimized BERT Pretraining Approach](https://arxiv.org/pdf/1907.11692.pdf)

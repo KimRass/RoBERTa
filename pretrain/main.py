@@ -99,6 +99,7 @@ if __name__ == "__main__":
         model.parameters(),
         lr=config.MAX_LR,
         betas=(config.BETA1, config.BETA2),
+        eps=config.EPS,
         weight_decay=config.WEIGHT_DECAY,
     )
 
@@ -125,12 +126,11 @@ if __name__ == "__main__":
     accum_acc = 0
     step_cnt = 0
     while True:
-        for gt_token_ids in tqdm(train_dl):
+        for gt_token_ids in train_dl:
             if step < N_STEPS:
                 step +=1
 
                 gt_token_ids = gt_token_ids.to(config.DEVICE)
-
                 masked_token_ids, select_mask = mlm(gt_token_ids)
 
                 pred_token_ids = model(masked_token_ids)
