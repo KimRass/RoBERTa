@@ -8,9 +8,8 @@ from torch.utils.data import Dataset
 import random
 
 import config
-from pretrain.wordpiece import load_fast_bert_tokenizer
 from utils import _token_ids_to_segment_ids
-from pretrain.wordpiece import parse
+from byte_level_bpe import parse
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -78,16 +77,4 @@ class BookCorpusForRoBERTa(Dataset):
             idx += 1
 
         new_token_ids = self._to_bert_input(new_token_ids)
-        seg_ids = _token_ids_to_segment_ids(token_ids=new_token_ids, sep_id=self.sep_id)
-        return new_token_ids, seg_ids
-
-
-if __name__ == "__main__":
-    tokenizer = load_fast_bert_tokenizer(vocab_dir=config.VOCAB_DIR)
-    ds = BookCorpusForRoBERTa(
-        epubtxt_dir="/Users/jongbeomkim/Documents/datasets/bookcorpus/epubtxt",
-        # epubtxt_dir="/Users/jongbeomkim/Documents/datasets/bookcorpus_subset/epubtxt",
-        tokenizer=tokenizer,
-        seq_len=config.SEQ_LEN,
-    )
-    print(len(ds))
+        return new_token_ids

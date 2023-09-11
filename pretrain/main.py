@@ -8,14 +8,14 @@ from time import time
 from tqdm.auto import tqdm
 import argparse
 
-import pretrain.config as config
+import config
 from utils import get_elapsed_time
 from model import BERTForPretraining
-from pretrain.wordpiece import load_fast_bert_tokenizer
+from byte_level_bpe import load_fast_roberta_tokenizer
 from pretrain.bookcorpus import BookCorpusForBERT, BookCorpusForRoBERTa
 from pretrain.masked_language_model import MaskedLanguageModel
-from pretrain.loss import BERTPretrainingLoss, RoBERTaPretrainingLoss
-from pretrain.evalute import get_nsp_acc, get_mlm_acc
+from loss import PretrainingLoss
+from evalute import get_acc
 
 
 def get_args():
@@ -56,22 +56,15 @@ if __name__ == "__main__":
     print(f"BATCH_SIZE = {args.batch_size}")
     print(f"N_WORKERS = {config.N_WORKERS}")
     print(f"MAX_LEN = {config.MAX_LEN}")
-    print(f"SEQ_LEN = {config.SEQ_LEN}")
 
-    # "We train with batch size of 256 sequences (256 sequences * 512 tokens
-    # = 128,000 tokens/batch) for 1,000,000 steps, which is approximately 40 epochs
-    # over the 3.3 billion word corpus." (Comment: 256 * 512 * 1,000,000 / 3,300,000,000
-    # = 39.7)
-    N_STEPS = (256 * 512 * 1_000_000) // (args.batch_size * config.SEQ_LEN)
+    N_STEPS = (256 * 512 * 1_000_000) // (args.batch_size * config.MAX_LEN)
     print(f"N_STEPS = {N_STEPS:,}", end="\n\n")
 
-    # tokenizer = load_bert_tokenizer(config.VOCAB_PATH)
-    tokenizer = load_fast_bert_tokenizer(vocab_dir=config.VOCAB_DIR)
-    # train_ds = BookCorpusForBERT(
+    tokenizer = load_fast_roberta_tokenizer(vocab_dir=config.VOCAB_DIR)
     train_ds = BookCorpusForRoBERTa(
         epubtxt_dir=args.epubtxt_dir,
         tokenizer=tokenizer,
-        seq_len=config.SEQ_LEN,
+        seq_len=config.MAX_LEN,
     )
     train_dl = DataLoader(
         train_ds,
@@ -112,8 +105,7 @@ if __name__ == "__main__":
         weight_decay=config.WEIGHT_DECAY,
     )
 
-    # crit = BERTPretrainingLoss(vocab_size=config.VOCAB_SIZE)
-    crit = RoBERTaPretrainingLoss(vocab_size=config.VOCAB_SIZE)
+    crit = PretrainingLoss(vocab_size=config.VOCAB_SIZE)
 
     ### Resume
     if args.ckpt_path is not None:
@@ -132,60 +124,43 @@ if __name__ == "__main__":
 
     print("Training...")
     start_time = time()
-    # accum_nsp_loss = 0
-    # accum_nsp_acc = 0
-    accum_mlm_loss = 0
-    accum_mlm_acc = 0
+    accum_loss = 0
+    accum_acc = 0
     step_cnt = 0
     while True:
-        # for gt_token_ids, seg_ids, gt_is_next in train_dl:
-        for gt_token_ids, seg_ids in train_dl:
+        for gt_token_ids in train_dl:
             if step < N_STEPS:
                 step +=1
 
                 gt_token_ids = gt_token_ids.to(config.DEVICE)
-                seg_ids = seg_ids.to(config.DEVICE)
-                # gt_is_next = gt_is_next.to(config.DEVICE)
 
                 masked_token_ids, select_mask = mlm(gt_token_ids)
 
-                pred_is_next, pred_token_ids = model(token_ids=masked_token_ids, seg_ids=seg_ids)
-                # nsp_loss, mlm_loss = crit(
-                mlm_loss = crit(
-                    # pred_is_next=pred_is_next,
-                    # gt_is_next=gt_is_next,
+                pred_token_ids = model(masked_token_ids)
+                loss = crit(
                     pred_token_ids=pred_token_ids,
                     gt_token_ids=gt_token_ids,
                     select_mask=select_mask,
                 )
-                # loss = nsp_loss + mlm_loss
-                loss = mlm_loss
 
                 optim.zero_grad()
                 loss.backward()
                 optim.step()
 
-                # accum_nsp_loss += nsp_loss.item()
-                accum_mlm_loss += mlm_loss.item()
+                accum_loss += loss.item()
 
-                # nsp_acc = get_nsp_acc(pred_is_next=pred_is_next, gt_is_next=gt_is_next)
-                # accum_nsp_acc += nsp_acc
-                mlm_acc = get_mlm_acc(pred_token_ids=pred_token_ids, gt_token_ids=gt_token_ids)
-                accum_mlm_acc += mlm_acc
+                acc = get_acc(pred_token_ids=pred_token_ids, gt_token_ids=gt_token_ids)
+                accum_acc += acc
                 step_cnt += 1
 
                 if (step % (config.N_CKPT_SAMPLES // args.batch_size) == 0) or (step == N_STEPS):
                     print(f"[ {step:,}/{N_STEPS:,} ][ {get_elapsed_time(start_time)} ]", end="")
-                    # print(f"[ NSP loss: {accum_nsp_loss / step_cnt:.4f} ]", end="")
-                    # print(f"[ NSP acc: {accum_nsp_acc / step_cnt:.3f} ]", end="")
-                    print(f"[ MLM loss: {accum_mlm_loss / step_cnt:.4f} ]", end="")
-                    print(f"[ MLM acc: {accum_mlm_acc / step_cnt:.3f} ]")
+                    print(f"[ MLM loss: {accum_loss / step_cnt:.4f} ]", end="")
+                    print(f"[ MLM acc: {accum_acc / step_cnt:.3f} ]")
 
                     start_time = time()
-                    # accum_nsp_loss = 0
-                    # accum_nsp_acc = 0
-                    accum_mlm_loss = 0
-                    accum_mlm_acc = 0
+                    accum_loss = 0
+                    accum_acc = 0
                     step_cnt = 0
 
                     cur_ckpt_path = config.CKPT_DIR/f"bookcorpus_step_{step}.pth"

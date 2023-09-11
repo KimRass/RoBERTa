@@ -215,3 +215,25 @@ class MLMHead(nn.Module):
     def forward(self, x):
         x = self.head_proj(x)
         return x
+
+
+class BERTForPretraining(nn.Module):
+    def __init__(self, vocab_size, max_len, pad_id, n_layers, n_heads, hidden_size, mlp_size):
+        super().__init__()
+
+        self.roberta = RoBERTa(
+            vocab_size=vocab_size,
+            max_len=max_len,
+            pad_id=pad_id,
+            n_layers=n_layers,
+            n_heads=n_heads,
+            hidden_size=hidden_size,
+            mlp_size=mlp_size,
+        )
+
+        self.mlm_head = MLMHead(vocab_size=vocab_size, hidden_size=hidden_size)
+
+    def forward(self, token_ids):
+        x = self.roberta(token_ids)
+        pred_token_ids = self.mlm_head(x)
+        return pred_token_ids
