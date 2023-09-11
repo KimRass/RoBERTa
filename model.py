@@ -199,9 +199,9 @@ class RoBERTa(nn.Module):
         mask.requires_grad = False
         return mask
 
-    def forward(self, token_ids, seg_ids):
-        x = self.embed(token_ids=token_ids, seg_ids=seg_ids)
-        pad_mask = self._get_pad_mask(token_ids)
+    def forward(self, x):
+        pad_mask = self._get_pad_mask(x)
+        x = self.embed(x)
         x = self.tf_block(x, mask=pad_mask)
         return x
 
@@ -217,7 +217,7 @@ class MLMHead(nn.Module):
         return x
 
 
-class BERTForPretraining(nn.Module):
+class RoBERTaForPretraining(nn.Module):
     def __init__(self, vocab_size, max_len, pad_id, n_layers, n_heads, hidden_size, mlp_size):
         super().__init__()
 
@@ -233,7 +233,7 @@ class BERTForPretraining(nn.Module):
 
         self.mlm_head = MLMHead(vocab_size=vocab_size, hidden_size=hidden_size)
 
-    def forward(self, token_ids):
-        x = self.roberta(token_ids)
-        pred_token_ids = self.mlm_head(x)
-        return pred_token_ids
+    def forward(self, x):
+        x = self.roberta(x)
+        x = self.mlm_head(x)
+        return x
