@@ -54,7 +54,7 @@ if __name__ == "__main__":
     print(f"N_WORKERS = {config.N_WORKERS}")
     print(f"MAX_LEN = {config.MAX_LEN}")
 
-    N_STEPS = (256 * 512 * 1_000_000) // (args.batch_size * config.MAX_LEN)
+    N_STEPS = (8192 * 100_000) // args.batch_size
     print(f"N_STEPS = {N_STEPS:,}", end="\n\n")
 
     tokenizer = load_fast_roberta_tokenizer(vocab_dir=config.VOCAB_DIR)
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     while True:
         for gt_token_ids in train_dl:
             if step < N_STEPS:
-                step +=1
+                step += 1
 
                 gt_token_ids = gt_token_ids.to(config.DEVICE)
                 masked_token_ids, select_mask = mlm(gt_token_ids)
