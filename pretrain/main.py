@@ -15,7 +15,7 @@ from byte_level_bpe import load_fast_roberta_tokenizer
 from pretrain.bookcorpus import BookCorpusForBERT, BookCorpusForRoBERTa
 from pretrain.masked_language_model import MaskedLanguageModel
 from loss import PretrainingLoss
-from evalute import get_acc
+from evalute import get_mlm_acc
 
 
 def get_args():
@@ -25,7 +25,6 @@ def get_args():
         "--epubtxt_dir", type=str, required=False, default="../bookcurpus/epubtxt",
     )
     parser.add_argument("--batch_size", type=int, required=False, default=256)
-    parser.add_argument("--tokenize_in_advance", action="store_true")
     parser.add_argument("--ckpt_path", type=str, required=False)
 
     args = parser.parse_args()
@@ -149,7 +148,7 @@ if __name__ == "__main__":
 
                 accum_loss += loss.item()
 
-                acc = get_acc(pred_token_ids=pred_token_ids, gt_token_ids=gt_token_ids)
+                acc = get_mlm_acc(pred_token_ids=pred_token_ids, gt_token_ids=gt_token_ids)
                 accum_acc += acc
                 step_cnt += 1
 

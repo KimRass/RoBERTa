@@ -5,10 +5,7 @@
 import os
 import torch
 from torch.utils.data import Dataset
-import random
 
-import config
-from utils import _token_ids_to_segment_ids
 from byte_level_bpe import parse
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
