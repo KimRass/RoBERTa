@@ -21,10 +21,8 @@ from evalute import get_mlm_acc
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(
-        "--epubtxt_dir", type=str, required=False, default="../bookcurpus/epubtxt",
-    )
-    parser.add_argument("--batch_size", type=int, required=False, default=256)
+    parser.add_argument("--epubtxt_dir", type=str, required=True)
+    parser.add_argument("--batch_size", type=int, required=True)
     parser.add_argument("--ckpt_path", type=str, required=False)
 
     args = parser.parse_args()
@@ -127,7 +125,7 @@ if __name__ == "__main__":
     accum_acc = 0
     step_cnt = 0
     while True:
-        for gt_token_ids in train_dl:
+        for gt_token_ids in tqdm(train_dl):
             if step < N_STEPS:
                 step +=1
 
