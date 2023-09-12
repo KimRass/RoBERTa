@@ -2,6 +2,10 @@ import torch
 from pathlib import Path
 
 ### Data
+# "We consider training BERT with a larger byte-level BPE vocabulary containing 50K subword units,
+# without any additional preprocessing or tokenization of the input. This adds approximately
+# 15M and 20M additional parameters for BERT-BASE and BERT-LARGE, respectively."
+# VOCAB_SIZE = 50_000
 VOCAB_SIZE = 30_000
 VOCAB_DIR = Path(__file__).parent/"bookcorpus_vocab"
 MAX_LEN = 512
@@ -22,11 +26,12 @@ RANDOMIZE_PROB = 0.1
 
 ### Optimizer
 MAX_LR = 6e-4 # "Peak Learning Rate"
-BETA1 = 0.9
-BETA2 = 0.98
-EPS = 1e-6
+BETA1 = 0.9 # "Adam $\beta_{1}$"
+BETA2 = 0.98 # "Adam $\beta_{2}$"
+EPS = 1e-6 # "Adam $\epsilon$"
 # WEIGHT_DECAY = 0.01
-WEIGHT_DECAY = 0
+WEIGHT_DECAY = 0 # "Weight Decay"
+N_WARM_STEPS = 24_000 # "Warmup Steps"
 
 ### Training
 N_GPUS = torch.cuda.device_count()

@@ -7,6 +7,7 @@ from pathlib import Path
 from time import time
 from tqdm.auto import tqdm
 import argparse
+import matplotlib.pyplot as plt
 
 import config
 from utils import get_elapsed_time
@@ -22,11 +23,32 @@ def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--epubtxt_dir", type=str, required=True)
-    parser.add_argument("--batch_size", type=int, required=True)
+    parser.add_argument("--batch_size", type=int, required=False, default=8192) # "Batch Size"
     parser.add_argument("--ckpt_path", type=str, required=False)
 
     args = parser.parse_args()
     return args
+
+
+def get_lr(max_lr, warmup_steps, n_steps, step): # "Learning Rate Decay: Linear"
+    if step < warmup_steps:
+        lr = max_lr * (step / warmup_steps)
+    else:
+        lr = - max_lr / (n_steps - warmup_steps) * (step - n_steps)
+    return lr
+
+
+def vis_lr(max_lr, warmup_steps, n_steps):
+    lrs = [
+        get_lr(max_lr=max_lr, warmup_steps=warmup_steps, n_steps=n_steps, step=step)
+        for step in range(1, n_steps + 1)
+    ]
+    plt.plot(lrs)
+    plt.show()
+
+
+def update_lr(lr, optim):
+    optim.param_groups[0]["lr"] = lr
 
 
 def save_checkpoint(step, model, optim, ckpt_path):
@@ -130,6 +152,14 @@ if __name__ == "__main__":
         for gt_token_ids in train_dl:
             if step < N_STEPS:
                 step += 1
+
+                lr = get_lr(
+                    max_lr=config.MAX_LR,
+                    warmup_steps=config.N_WARM_STEPS,
+                    n_steps=N_STEPS,
+                    step=step,
+                )
+                update_lr(lr=lr, optim=optim)
 
                 gt_token_ids = gt_token_ids.to(config.DEVICE)
                 masked_token_ids, select_mask = mlm(gt_token_ids)
