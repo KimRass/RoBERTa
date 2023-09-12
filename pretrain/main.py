@@ -55,6 +55,7 @@ if __name__ == "__main__":
     print(f"MAX_LEN = {config.MAX_LEN}")
 
     N_STEPS = (8192 * 100_000) // args.batch_size
+    N_ACCUM_STEPS = 8192 // args.batch_size
     print(f"N_STEPS = {N_STEPS:,}", end="\n\n")
 
     tokenizer = load_fast_roberta_tokenizer(vocab_dir=config.VOCAB_DIR)
@@ -139,12 +140,13 @@ if __name__ == "__main__":
                     gt_token_ids=gt_token_ids,
                     select_mask=select_mask,
                 )
-
-                optim.zero_grad()
-                loss.backward()
-                optim.step()
-
                 accum_loss += loss.item()
+                loss /= N_ACCUM_STEPS
+                loss.backward()
+
+                if step % N_ACCUM_STEPS == 0:
+                    optim.step()
+                    optim.zero_grad()
 
                 acc = get_mlm_acc(pred_token_ids=pred_token_ids, gt_token_ids=gt_token_ids)
                 accum_acc += acc

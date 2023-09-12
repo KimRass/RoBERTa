@@ -15,9 +15,13 @@ MLP_SIZE = 384 * 4
 ### Regularization
 DROP_PROB = 0.1
 
+### Masked Language Model
+SELECT_PROB = 0.15
+MASK_PROB = 0.8
+RANDOMIZE_PROB = 0.1
+
 ### Optimizer
-MAX_LR = 7e-5
-MAX_LR = 2e-4
+MAX_LR = 6e-4 # "Peak Learning Rate"
 BETA1 = 0.9
 BETA2 = 0.98
 EPS = 1e-6
@@ -33,7 +37,3 @@ else:
 N_WORKERS = 4
 CKPT_DIR = Path(__file__).parent/"pretrain/checkpoints"
 N_CKPT_SAMPLES = 100_000
-### Masked Language Model
-SELECT_PROB = 0.15
-MASK_PROB = 0.8
-RANDOMIZE_PROB = 0.1
