@@ -1,7 +1,4 @@
-# "We consider training BERT with a larger byte-level BPE vocabulary containing 50K subword units, without any additional preprocessing or tokenization of the input. This adds approximately 15M and 20M additional parameters for BERTBASE and BERTLARGE, respectively."
-
 import argparse
-import re
 from pathlib import Path
 from tqdm import tqdm
 from transformers import RobertaTokenizerFast
@@ -26,7 +23,6 @@ def parse(epubtxt_dir, with_document=False):
         with open(doc_path, mode="r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                # if (not line) or (re.search(pattern=REGEX, string=line)) or (line.count(" ") < 1):
                 if (not line) or (line.count(" ") < 1):
                     continue
                 if not with_document:
