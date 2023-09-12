@@ -12,8 +12,8 @@ import config
 from utils import get_elapsed_time
 from model import RoBERTaForPretraining
 from byte_level_bpe import load_fast_roberta_tokenizer
-from pretrain.bookcorpus import BookCorpusForRoBERTa
-from pretrain.masked_language_model import MaskedLanguageModel
+from bookcorpus import BookCorpusForRoBERTa
+from masked_language_model import MaskedLanguageModel
 from loss import PretrainingLoss
 from evalute import get_mlm_acc
 
