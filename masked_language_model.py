@@ -24,20 +24,21 @@ class MaskedLanguageModel(object):
         if mask_id not in no_mask_token_ids:
             no_mask_token_ids += [mask_id]
 
-
-    def __call__(self, gt_token_ids):
-        masked_token_ids = gt_token_ids.clone()
-
-        rand_tensor = torch.rand(masked_token_ids.shape, device=masked_token_ids.device)
+    def _get_select_mask(self, gt_token_ids):
+        rand_tensor = torch.rand(gt_token_ids.shape, device=gt_token_ids.device)
         no_mask_mask = torch.isin(
-            masked_token_ids,
-            torch.as_tensor(self.no_mask_token_ids, device=masked_token_ids.device),
+            gt_token_ids,
+            torch.as_tensor(self.no_mask_token_ids, device=gt_token_ids.device),
         )
         rand_tensor.masked_fill_(mask=no_mask_mask, value=1)
 
         # "Chooses 15% of the token positions at random for prediction."
         select_mask = (rand_tensor < self.select_prob)
         # `select_mask.sum() / gt_token_ids.numel() ~= 0.15`
+        return select_mask
+
+    def _replace_some_tokens(self, gt_token_ids, select_mask):
+        masked_token_ids = gt_token_ids.clone()
 
         # "If the $i$-th token is chosen, we replace the $i$-th token with (1) the [MASK] token
         # 80% of the time."
@@ -59,4 +60,11 @@ class MaskedLanguageModel(object):
             device=masked_token_ids.device,
         )
         masked_token_ids[randomize_mask.nonzero(as_tuple=True)] = random_token_ids
+        return masked_token_ids
+
+    def __call__(self, gt_token_ids):
+        select_mask = self._get_select_mask(gt_token_ids)
+        masked_token_ids = self._replace_some_tokens(
+            gt_token_ids=gt_token_ids, select_mask=select_mask,
+        )
         return masked_token_ids, select_mask
