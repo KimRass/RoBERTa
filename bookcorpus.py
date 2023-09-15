@@ -55,7 +55,7 @@ class BookCorpusForRoBERTa(Dataset):
         return len(self.lines)
 
     def __getitem__(self, idx):
-        new_token_ids = list()
+        gt_token_ids = list()
         prev_doc = self.lines[idx][0]
         while True:
             if idx >= len(self.lines) - 1:
@@ -63,15 +63,15 @@ class BookCorpusForRoBERTa(Dataset):
                 
             cur_doc, line = self.lines[idx]
             token_ids = _encode(line, tokenizer=self.tokenizer)
-            if len(new_token_ids) + len(token_ids) >= self.seq_len - 2:
+            if len(gt_token_ids) + len(token_ids) >= self.seq_len - 2:
                 break
 
             if prev_doc != cur_doc:
-                new_token_ids.append(self.sep_id)
+                gt_token_ids.append(self.sep_id)
 
-            new_token_ids.extend(token_ids)
+            gt_token_ids.extend(token_ids)
             prev_doc = cur_doc
             idx += 1
 
-        new_token_ids = self._to_bert_input(new_token_ids)
-        return new_token_ids
+        gt_token_ids = self._to_bert_input(gt_token_ids)
+        return gt_token_ids

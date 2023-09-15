@@ -24,7 +24,7 @@ class MaskedLanguageModel(object):
         if mask_id not in no_mask_token_ids:
             no_mask_token_ids += [mask_id]
 
-    def _get_select_mask(self, gt_token_ids):
+    def _get_mlm_mask(self, gt_token_ids):
         rand_tensor = torch.rand(gt_token_ids.shape, device=gt_token_ids.device)
         no_mask_mask = torch.isin(
             gt_token_ids,
@@ -63,7 +63,7 @@ class MaskedLanguageModel(object):
         return masked_token_ids
 
     def __call__(self, gt_token_ids):
-        select_mask = self._get_select_mask(gt_token_ids)
+        select_mask = self._get_mlm_mask(gt_token_ids)
         masked_token_ids = self._replace_some_tokens(
             gt_token_ids=gt_token_ids, select_mask=select_mask,
         )

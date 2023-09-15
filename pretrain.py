@@ -89,7 +89,8 @@ if __name__ == "__main__":
     train_dl = DataLoader(
         train_ds,
         batch_size=args.batch_size,
-        shuffle=True,
+        # shuffle=True,
+        shuffle=False,
         num_workers=config.N_WORKERS,
         pin_memory=True,
         drop_last=True,
@@ -111,7 +112,11 @@ if __name__ == "__main__":
         vocab_size=config.VOCAB_SIZE,
         mask_id=tokenizer.mask_token_id,
         no_mask_token_ids=[
-            train_ds.unk_id, train_ds.cls_id, train_ds.sep_id, train_ds.pad_id, train_ds.unk_id,
+            tokenizer.unk_token_id,
+            tokenizer.cls_token_id,
+            tokenizer.sep_token_id,
+            tokenizer.pad_token_id,
+            tokenizer.mask_token_id,
         ],
         select_prob=config.SELECT_PROB,
         mask_prob=config.MASK_PROB,
@@ -162,13 +167,13 @@ if __name__ == "__main__":
                 update_lr(lr=lr, optim=optim)
 
                 gt_token_ids = gt_token_ids.to(config.DEVICE)
-                masked_token_ids, select_mask = mlm(gt_token_ids)
+                masked_token_ids, mlm_mask = mlm(gt_token_ids)
 
                 pred_token_ids = model(masked_token_ids)
                 loss = crit(
                     pred_token_ids=pred_token_ids,
                     gt_token_ids=gt_token_ids,
-                    select_mask=select_mask,
+                    mlm_mask=mlm_mask,
                 )
                 accum_loss += loss.item()
                 loss /= N_ACCUM_STEPS
