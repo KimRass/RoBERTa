@@ -34,7 +34,7 @@ def get_lr(max_lr, warmup_steps, n_steps, step): # "Learning Rate Decay: Linear"
     if step < warmup_steps:
         lr = max_lr * (step / warmup_steps)
     else:
-        lr = - max_lr / (n_steps - warmup_steps) * (step - n_steps)
+        lr = - max_lr / (n_steps - warmup_steps + 1) * (step - n_steps - 1)
     return lr
 
 
